@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSM Sustainability AI Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="https://cdn-nexlink.s3.us-east-2.amazonaws.com/Favicon_1f31b4ff-e7cf-44eb-8240-8be4de3bdcfd.png" type="image/png">
+
+    <style>
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .chat-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #4A5568 #EDF2F7;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: #EDF2F7;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: #4A5568;
+            border-radius: 3px;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+        }
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: rotate 1s linear infinite;
+        }
+        .loader-text {
+            font-size: 14px;
+            margin-left: 15px;
+            color: #4a5568;
+        }
+        .loader-text span {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .loader-text span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loader-text span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        .fun-fact {
+            font-size: 14px;
+            color: #4a5568;
+            margin-top: 10px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            padding: 10px;
+            background-color: #f0fff4;
+            border-radius: 8px;
+            border: 1px solid #9ae6b4;
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            color: white;
+            font-weight: 600;
+            border: 2px solid #3d8b40;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gradient-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #45a049, #1e88e5);
+        }
+
+        .gradient-btn i {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            padding: 10px;
+            margin-right: 10px;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .gradient-btn:hover i {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .gradient-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg custom-shadow w-full max-w-4xl p-6">
+        <div class="flex justify-center mb-6">
+            <img src="https://cdn-nexlink.s3.us-east-2.amazonaws.com/rsm-international-vector-logo_2_eb7fb9d1-228a-426a-b682-c0d24dc736fa.jpg" alt="RSM Logo" class="h-16">
+        </div>
+        <h1 class="text-3xl font-bold mb-2">Hi Dear, <span class="text-green-600">Reader</span></h1>
+        <h2 class="text-2xl text-green-600 mb-2">Welcome to RSM's - IFRS S1 & S2 for GCC Businesses.</h2>
+        <p class="text-gray-600 mb-6">Use one of the most common prompts below or use your own to begin</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <a href="https://cdn-nexlink.s3.us-east-2.amazonaws.com/RSM_IFRS_Newsletter_compressed_60b4b697-ac77-4c14-9942-d40e68e3a645.pdf" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                <i class="fas fa-download text-gray-600"></i>
+                <span>Download Newsletter</span>
+            </a>
+            <div class="relative inline-block text-left w-full">
+                <button id="appointmentDropdown" type="button" class="w-full flex items-center justify-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                    <i class="fas fa-envelope text-gray-600"></i>
+                    <span>Book an Appointment with RSM Team</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                </button>
+                <div id="appointmentOptions" class="hidden origin-top-right absolute right-0 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="appointmentDropdown">
+                        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=deepali.singh@rsm.com.kw&su=Appointment Request with RSM Team" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                            <i class="fab fa-google mr-2"></i> Gmail
+                        </a>
+                        <a href="https://outlook.office.com/mail/deeplink/compose?to=deepali.singh@rsm.com.kw&subject=Appointment%20Request%20with%20RSM%20Team" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
+                            <i class="fab fa-microsoft mr-2"></i> Outlook
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <button class="action-btn gradient-btn flex items-center justify-center space-x-2 p-4 text-center">
+                <i class="fas fa-book-open"></i>
+                <span>IFRS S1: General Requirements</span>
+            </button>
+            <button class="action-btn gradient-btn flex items-center justify-center space-x-2 p-4 text-center">
+                <i class="fas fa-cloud-sun"></i>
+                <span>IFRS S2: Climate related Disclosures</span>
+            </button>
+            <button class="action-btn gradient-btn flex items-center justify-center space-x-2 p-4 text-center">
+                <i class="fas fa-chart-line"></i>
+                <span>Key insights about IFRS S1 & S2</span>
+            </button>
+        </div>
+        
+        <button id="refreshPrompts" class="flex items-center mb-6 text-gray-600 hover:text-gray-800 transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>
+            Refresh Prompts
+        </button>
+        
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+            <div id="chatContainer" class="chat-container p-4 space-y-4">
+                <!-- Chat messages will be inserted here -->
+            </div>
+            <div class="bg-gray-50 p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <input id="userInput" type="text" placeholder="Ask about RSM Sustainability..." class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <span id="charCount" class="text-sm text-gray-500 whitespace-nowrap">0/1000</span>
+                    <button id="sendButton" class="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <select id="searchType" class="w-full p-2 mt-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
+            <option value="all">RSM Sustainability AI Assistant</option>
+        </select>
+    </div>
+
+    <!-- Add this audio element at the end of the body, before the closing </body> tag -->
+    <audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3"></audio>
+
+    <script>
+        // DOM elements
+        const userInput = document.getElementById('userInput');
+        const charCount = document.getElementById('charCount');
+        const sendButton = document.getElementById('sendButton');
+        const refreshPrompts = document.getElementById('refreshPrompts');
+        const searchType = document.getElementById('searchType');
+        const actionButtons = document.querySelectorAll('.action-btn');
+        const chatContainer = document.getElementById('chatContainer');
+        const notificationSound = document.getElementById('notificationSound');
+
+        // Fun facts array
+        const funFacts = [
+            "Did you know? The concept of ESG was first introduced in a 2004 United Nations report titled 'Who Cares Wins'.",
+            "Fun fact: The first global ESG index was launched by the Dow Jones in 1999.",
+            "Interesting tidbit: More than 80% of the world's largest companies now report on ESG metrics.",
+            "Curious fact: The 'E' in ESG focuses on environmental factors like carbon emissions, water usage, and biodiversity.",
+            "Did you know? The social pillar in ESG evaluates factors like employee welfare, diversity, and community engagement.",
+            "Fun fact: ESG investing assets surpassed $35 trillion globally in 2020, accounting for over one-third of total managed assets.",
+            "Interesting tidbit: Governance in ESG includes board diversity, executive compensation, and corporate transparency.",
+            "Curious fact: Companies with strong ESG performance tend to have lower costs of capital, according to several studies.",
+            "Did you know? The European Union’s ESG regulations are some of the strictest in the world, including the Sustainable Finance Disclosure Regulation (SFDR).",
+            "Fun fact: Over 90% of S&P 500 companies publish sustainability reports that include ESG factors.",
+            "Interesting tidbit: ESG ratings are provided by agencies like MSCI, Sustainalytics, and ISS, helping investors assess company performance.",
+            "Curious fact: In 2021, the U.S. Securities and Exchange Commission (SEC) created a Climate and ESG Task Force to focus on ESG-related disclosures.",
+            "Did you know? The United Nations Sustainable Development Goals (SDGs) serve as a guiding framework for many ESG strategies.",
+            "Fun fact: The 'G' in ESG helps measure a company's internal controls, including ethics, transparency, and shareholder rights.",
+            "Interesting tidbit: ESG criteria are increasingly being used by institutional investors, such as pension funds, to guide investment decisions.",
+            "Curious fact: The Paris Agreement of 2015 accelerated the global focus on environmental factors in ESG reporting.",
+            "Did you know? In some countries, ESG reporting is mandatory for publicly traded companies, including those in the European Union.",
+            "Fun fact: ESG investments are sometimes referred to as 'responsible' or 'sustainable' investments.",
+            "Interesting tidbit: Environmental risks from climate change have made the 'E' in ESG the fastest-growing area of concern for investors.",
+            "Curious fact: Companies with higher ESG scores tend to have better brand loyalty and customer satisfaction.",
+            "Did you know? ESG factors are increasingly linked to financial performance, with companies scoring higher in ESG outperforming lower-rated ones.",
+            "Fun fact: The Task Force on Climate-related Financial Disclosures (TCFD) was established in 2015 to develop climate-related risk reporting standards.",
+            "Interesting tidbit: The term 'greenwashing' refers to companies that falsely market their products or policies as environmentally friendly.",
+            "Curious fact: In Japan, ESG reporting was encouraged by the introduction of the Corporate Governance Code in 2015.",
+            "Did you know? More than 2000 organizations worldwide support the Global Reporting Initiative (GRI) for sustainability reporting."
+        ];
+        // Set to keep track of shown facts
+        let shownFacts = new Set();
+
+        // Character count functionality
+        userInput.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = `${count}/1000`;
+            
+            // Disable input and button if character limit is exceeded
+            if (count > 1000) {
+                this.value = this.value.slice(0, 1000);
+                sendButton.disabled = true;
+                sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                sendButton.disabled = false;
+                sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // Function to format message
+        function formatMessage(message) {
+            // Convert markdown-like syntax to HTML
+            return message
+                .replace(/###\s*(.*?)\s*(\n|$)/g, '<h3 class="text-lg font-semibold mt-2 mb-1">$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code class="bg-gray-100 rounded px-1">$1</code>')
+                .replace(/```([\s\S]*?)```/g, '<pre><code class="block bg-gray-100 rounded p-2 my-2">$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // Function to add message to chat
+        function addMessageToChat(message, isUser = true) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            
+            const innerDiv = document.createElement('div');
+            innerDiv.className = `inline-block ${isUser ? 'bg-green-100' : 'bg-gray-100'} rounded-lg px-4 py-2 max-w-[70%]`;
+            
+            const textElement = document.createElement('div');
+            textElement.className = 'text-sm';
+            textElement.innerHTML = isUser ? message : formatMessage(message);
+            
+            const timestamp = document.createElement('p');
+            timestamp.className = 'text-xs text-gray-500 mt-1';
+            timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            innerDiv.appendChild(textElement);
+            innerDiv.appendChild(timestamp);
+            messageElement.appendChild(innerDiv);
+            
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Function to add loading indicator
+        function addLoadingIndicator() {
+            const loaderElement = document.createElement('div');
+            loaderElement.className = 'flex justify-start';
+            loaderElement.innerHTML = `
+                <div class="inline-block bg-gray-100 rounded-lg px-4 py-2 w-full">
+                    <div class="loader-container">
+                        <div class="loader"></div>
+                        <div class="loader-text">Thinking<span>.</span><span>.</span><span>.</span></div>
+                    </div>
+                    <div class="fun-fact"></div>
+                </div>
+            `;
+            chatContainer.appendChild(loaderElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return loaderElement;
+        }
+
+        // Function to get a new fact
+        function getNewFact() {
+            if (shownFacts.size === funFacts.length) {
+                shownFacts.clear();
+            }
+            let fact;
+            do {
+                fact = funFacts[Math.floor(Math.random() * funFacts.length)];
+            } while (shownFacts.has(fact));
+            shownFacts.add(fact);
+            return fact;
+        }
+
+        // Function to update fun fact
+        function updateFunFact(loaderElement) {
+            const funFactElement = loaderElement.querySelector('.fun-fact');
+            funFactElement.textContent = getNewFact();
+            funFactElement.style.opacity = 1;
+
+            return setInterval(() => {
+                funFactElement.style.opacity = 0;
+                setTimeout(() => {
+                    funFactElement.text
+                    funFactElement.textContent = getNewFact();
+                    funFactElement.style.opacity = 1;
+                }, 500);
+            }, 5000);
+        }
+
+        // Function to remove loading indicator
+        function removeLoadingIndicator(element, interval) {
+            if (element && element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+            if (interval) {
+                clearInterval(interval);
+            }
+        }
+
+        // Function to get response from API
+        async function getResponseFromAPI(message) {
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.response;
+            } catch (error) {
+                console.error('Error:', error);
+                return 'Sorry, there was an error processing your request. Please try again later.';
+            }
+        }
+
+        // Function to send message
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessageToChat(message);
+                userInput.value = '';
+                charCount.textContent = '0/1000';
+
+                const loaderElement = addLoadingIndicator();
+                const funFactInterval = updateFunFact(loaderElement);
+                
+                try {
+                    const response = await getResponseFromAPI(message);
+                    removeLoadingIndicator(loaderElement, funFactInterval);
+                    addMessageToChat(response, false);
+                } catch (error) {
+                    removeLoadingIndicator(loaderElement, funFactInterval);
+                    addMessageToChat("I'm sorry, but I couldn't process your request at this time. Please try again later.", false);
+                }
+            }
+        }
+
+        // Send button functionality
+        sendButton.addEventListener('click', sendMessage);
+
+        // Enter key functionality
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Refresh prompts functionality
+        refreshPrompts.addEventListener('click', function() {
+            chatContainer.innerHTML = '';
+        });
+
+        // Action buttons functionality
+        actionButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const action = this.textContent.trim();
+                addMessageToChat(action);
+
+                const loaderElement = addLoadingIndicator();
+                const funFactInterval = updateFunFact(loaderElement);
+                
+                try {
+                    const response = await getResponseFromAPI(action);
+                    removeLoadingIndicator(loaderElement, funFactInterval);
+                    addMessageToChat(response, false);
+                } catch (error) {
+                    removeLoadingIndicator(loaderElement, funFactInterval);
+                    addMessageToChat("I'm sorry, but I couldn't process your request at this time. Please try again later.", false);
+                }
+            });
+        });
+
+        // Search type change functionality
+        searchType.addEventListener('change', function() {
+            console.log('Search type changed to:', this.value);
+            // Here you would typically update the search context
+            // For demo purposes, we're just logging to console
+        });
+
+        // Function to add welcome message
+        function addWelcomeMessage() {
+            const welcomeMessage = "Welcome to RSM’s - I'm here to help you with questions about IFRS S1 & S2 for GCC Businesses.";
+            addMessageToChat(welcomeMessage, false);
+            
+            // Play notification sound
+            const audio = document.getElementById('notificationSound');
+            audio.play();
+        }
+
+        // Function to set the welcome message with delay
+        function setDelayedWelcomeMessage() {
+            // Random delay between 3000 and 4000 milliseconds (3-4 seconds)
+            const delay = Math.floor(Math.random() * (4000 - 3000 + 1) + 3000);
+            setTimeout(addWelcomeMessage, delay);
+        }
+
+        // Call the function when the page loads
+        window.addEventListener('load', setDelayedWelcomeMessage);
+
+        const appointmentDropdown = document.getElementById('appointmentDropdown');
+        const appointmentOptions = document.getElementById('appointmentOptions');
+
+        let dropdownTimeout;
+
+        function showDropdown() {
+            clearTimeout(dropdownTimeout);
+            appointmentOptions.classList.remove('hidden');
+        }
+
+        function hideDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                appointmentOptions.classList.add('hidden');
+            }, 300); // 300ms delay before hiding
+        }
+
+        appointmentDropdown.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (appointmentOptions.classList.contains('hidden')) {
+                showDropdown();
+            } else {
+                hideDropdown();
+            }
+        });
+
+        appointmentOptions.addEventListener('mouseenter', showDropdown);
+        appointmentOptions.addEventListener('mouseleave', hideDropdown);
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            hideDropdown();
+        });
+
+        // Prevent immediate closing when clicking inside the dropdown
+        appointmentOptions.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+    </script>
+</body>
+</html>
