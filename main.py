@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 ASSISTANT_ID = "asst_SizeRJtLIRnks53yEh8G6fU5"
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Initialize OpenAI client with just the API key
+client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Define the regex pattern for removing the source annotations
 SOURCE_TAG_PATTERN = r'【[^】]+】'
@@ -65,4 +67,8 @@ def chat():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
 
